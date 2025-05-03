@@ -90,7 +90,7 @@
             <p class="mb-6">This tool helps you create Wikipedia articles based on existing Wikidata entries. We'll guide you through selecting a subject, choosing a language, and generating a Wikipedia draft that you can further develop.</p>
             
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-                <p class="font-medium">For this initial version, we're focusing on <span class="font-bold">NADD creators</span> (Network Archives Documents Drawn) - a collection of artists, archivists, and creators documented in Wikidata.</p>
+                <p class="font-medium">For this initial version, we're focusing on <span class="font-bold">NADD creators</span> - a collection documented in Wikidata with property P5008 and value Q133504755.</p>
             </div>
             
             <h3 class="text-xl font-semibold mb-2">How it works:</h3>
@@ -293,6 +293,65 @@
 
         // Document ready function
         document.addEventListener('DOMContentLoaded', function() {
+            // Step navigation
+            document.getElementById('startButton').addEventListener('click', () => {
+                showStep(2);
+                fetchWikidataItems();
+            });
+            
+            document.getElementById('prevToIntro').addEventListener('click', () => {
+                showStep(1);
+            });
+            
+            document.getElementById('nextToLanguage').addEventListener('click', () => {
+                if (selectedItem) {
+                    showStep(3);
+                    displaySelectedItemInfo();
+                }
+            });
+            
+            document.getElementById('prevToSelect').addEventListener('click', () => {
+                showStep(2);
+            });
+            
+            document.getElementById('generateArticle').addEventListener('click', generateArticle);
+            
+            document.getElementById('prevToGenerate').addEventListener('click', () => {
+                showStep(3);
+            });
+            
+            document.getElementById('startOver').addEventListener('click', () => {
+                selectedItem = null;
+                document.getElementById('nextToLanguage').disabled = true;
+                document.getElementById('nextToLanguage').classList.add('opacity-50', 'cursor-not-allowed');
+                showStep(1);
+            });
+            
+            // Item filtering
+            document.getElementById('languageSelect').addEventListener('change', fetchWikidataItems);
+            document.getElementById('refreshButton').addEventListener('click', fetchWikidataItems);
+            
+            document.getElementById('entityTypeFilter').addEventListener('change', displayWikidataItems);
+            document.getElementById('searchInput').addEventListener('input', displayWikidataItems);
+            
+            // Copy wikitext button
+            document.getElementById('copyWikitext').addEventListener('click', () => {
+                const textarea = document.getElementById('wikitextOutput');
+                textarea.select();
+                document.execCommand('copy');
+                
+                // Show copied feedback
+                const button = document.getElementById('copyWikitext');
+                const originalText = button.innerHTML;
+                button.innerHTML = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>Copied!`;
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 2000);
+            });
+        });
             // Step navigation
             document.getElementById('startButton').addEventListener('click', () => {
                 showStep(2);
