@@ -74,17 +74,19 @@
             
             <div id="itemInfo" class="mb-6 p-4 bg-blue-50 rounded-lg"></div>
             
-            <div class="mb-4">
-                <h4 class="font-semibold text-gray-700">Preview:</h4>
-                <div id="preview" class="border rounded-md p-4 bg-gray-50 mb-4 prose max-w-none"></div>
-            </div>
-            
-            <div class="mb-4">
-                <h4 class="font-semibold text-gray-700">Wikitext to copy:</h4>
-                <textarea id="wikitextOutput" class="w-full h-64 border rounded-md p-4 font-mono text-sm mb-2"></textarea>
-                <button onclick="copyToClipboard()" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md">
-                    Copy to Clipboard
-                </button>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="font-semibold text-gray-700 mb-2">Wikitext to copy:</h4>
+                    <textarea id="wikitextOutput" class="w-full h-96 border rounded-md p-4 font-mono text-sm mb-2"></textarea>
+                    <button onclick="copyToClipboard()" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md">
+                        Copy to Clipboard
+                    </button>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-gray-700 mb-2">Preview:</h4>
+                    <div id="preview" class="border rounded-md p-4 bg-gray-50 h-96 overflow-y-auto prose max-w-none"></div>
+                </div>
             </div>
             
             <div id="instructions" class="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400">
@@ -227,7 +229,52 @@
             document.getElementById('itemInfo').innerHTML = html;
         }
 
-        function getItemType(itemData) {
+        function formatDate(dateString, language) {
+            if (!dateString) return '';
+            
+            try {
+                const date = new Date(dateString);
+                const day = date.getDate();
+                const monthNames = {
+                    'en': ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                    'nl': ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'],
+                    'pap': ['yanüari', 'febrüari', 'mart', 'aprel', 'mei', 'yüni', 'yüli', 'ougùstus', 'sèptèmber', 'òktober', 'novèmber', 'desèmber']
+                };
+                
+                const month = monthNames[language][date.getMonth()];
+                const year = date.getFullYear();
+                
+                if (language === 'en') {
+                    return `${month} ${day}, ${year}`;
+                } else {
+                    return `${day} ${month} ${year}`;
+                }
+            } catch {
+                return dateString;
+            }
+        }
+
+        function getClaimValue(itemData, property) {
+            if (!itemData.claims || !itemData.claims[property]) return null;
+            
+            const claims = itemData.claims[property];
+            if (claims.length === 0) return null;
+            
+            const claim = claims[0];
+            const datavalue = claim.mainsnak.datavalue;
+            
+            if (!datavalue) return null;
+            
+            if (datavalue.type === 'string') {
+                return datavalue.value;
+            } else if (datavalue.type === 'time') {
+                return datavalue.value.time;
+            } else if (datavalue.type === 'wikibase-entityid') {
+                return datavalue.value.id;
+            }
+            
+            return null;
+        }
             if (!itemData.claims || !itemData.claims.P31) {
                 return 'Generic item';
             }
@@ -245,10 +292,150 @@
         function generateWikitext(itemData, language, qid) {
             const itemType = getItemType(itemData);
             const label = getLabel(itemData, language);
+            const description = getDescription(itemData, language);
+            
+            // Extract key Wikidata information
+            const birthDate = getClaimValue(itemData, 'P569');
+            const birthPlace = getClaimValue(itemData, 'P19');
+            const occupation = getClaimValue(itemData, 'P106');
+            const website = getClaimValue(itemData, 'P856');
             
             let wikitext = '';
             
             if (itemType === 'Human') {
+                // Language-specific infobox
+                const infobox = {
+                    'en': `{{Infobox person/Wikidata | fetchwikidata=ALL}}`,
+                    'nl': `{{Infobox persoon Wikidata}}`,
+                    'pap': `{{Infobox persona}}`
+                }[language] || `{{Infobox person/Wikidata | fetchwikidata=ALL}}`;
+                
+                // Birth information
+                let birthInfo = '';
+                if (birthDate) {
+                    const formattedDate = formatDate(birthDate, language);
+                    const birthText = {
+                        'en': `(${formattedDate}) is`,
+                        'nl': `(${formattedDate}) is een`,
+                        'pap': `(${formattedDate}) ta un`
+                    }[language] || `(${formattedDate}) is`;
+                    
+                    if (birthPlace) {
+                        birthInfo = birthText.replace(')', `, ${birthPlace})`);
+                    } else {
+                        birthInfo = birthText;
+                    }
+                }
+                
+                // Occupation/description
+                let occupationText = '';
+                if (occupation) {
+                    // This is a simplified version - you'd want to resolve the Q-identifier to the actual occupation name
+                    occupationText = {
+                        'en': `${description || 'a person'}`,
+                        'nl': `${description || 'persoon'}`,
+                        'pap': `${description || 'un persona'}`
+                    }[language];
+                } else {
+                    occupationText = {
+                        'en': `${description || 'a person'}`,
+                        'nl': `${description || 'persoon'}`,
+                        'pap': `${description || 'un persona'}`
+                    }[language];
+                }
+                
+                const headers = {
+                    'en': {
+                        life: 'Early life',
+                        career: 'Career',
+                        work: 'Works',
+                        personal: 'Personal life',
+                        external: 'External links',
+                        references: 'References'
+                    },
+                    'nl': {
+                        life: 'Leven en werk',
+                        career: 'Loopbaan',
+                        work: 'Werk',
+                        personal: 'Persoonlijk leven',
+                        external: 'Externe links',
+                        references: 'Bronnen, noten en referenties'
+                    },
+                    'pap': {
+                        life: 'Bida i obra',
+                        career: 'Kariera',
+                        work: 'Obra',
+                        personal: 'Bida personal',
+                        external: 'Link eksterno',
+                        references: 'Referencia'
+                    }
+                }[language];
+                
+                wikitext = `${infobox}
+
+'''${label}''' ${birthInfo} ${occupationText}.
+
+==${headers.life}==
+<!-- Biesha kòpkes den e artíkulo akí por wòrdu adaptá segun nesesidát. -->
+${label} 
+
+==${headers.career}==
+<!-- Agregá informashon tokante su kariera. -->
+
+==${headers.personal}==
+<!-- Agregá informashon tokante bida personal. -->
+
+==${headers.external}==
+${website ? `* [${website} Sitio web oficial]` : '* <!-- Agregá link pa sitio web -->'}
+
+==${headers.references}==
+{{reflist}}
+
+[[Category:]]<!-- Agregá kategoria apropriado -->
+`;
+            } else if (itemType === 'Organization') {
+                const infobox = {
+                    'en': `{{Infobox organization/Wikidata}}`,
+                    'nl': `{{Infobox organisatie Wikidata}}`,
+                    'pap': `{{Infobox organisashon}}`
+                }[language] || `{{Infobox organization/Wikidata}}`;
+                
+                wikitext = `${infobox}
+
+'''${label}''' ta ${description}.
+
+==Historia==
+<!-- Agregá informashon tokante historiá di e organisashon. -->
+
+==Aktividatnan==
+<!-- Agregá informashon tokante kiko e organisashon ta hasi. -->
+
+==Link eksterno==
+${website ? `* [${website} Sitio web oficial]` : ''}
+
+==Referencia==
+{{reflist}}
+
+[[Category:]]<!-- Agregá kategoria apropriado -->
+`;
+            } else {
+                wikitext = `'''${label}''' ${description}.
+
+==Overview==
+<!-- Add general information about this item -->
+
+==External links==
+* {{Wikidata Infobox|${qid}}}
+
+==References==
+{{reflist}}
+
+[[Category:]]
+`;
+            }
+            
+            return wikitext;
+        }
                 wikitext = `{{Infobox person
 |name        = ${label}
 |image       = <!-- Add image if available -->
