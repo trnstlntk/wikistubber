@@ -33,7 +33,7 @@
         <div class="max-w-7xl mx-auto py-4 px-6">
             <div class="flex justify-between items-center">
                 <div class="flex items-center">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Wikidata_logo_without_paddings.svg/120px-Wikidata_logo_without_paddings.svg.png" alt="WikiStubber Logo" class="h-12 w-12 mr-3">
+                    <div class="h-12 w-12 mr-3">📚</div>
                     <h1 class="text-3xl font-bold text-gray-800">WikiStubber</h1>
                 </div>
             </div>
@@ -435,6 +435,77 @@ ${website ? `* [${website} Sitio web oficial]` : ''}
             }
             
             return wikitext;
+        }
+                // Language-specific infobox
+                const infobox = {
+                    'en': `{{Infobox person/Wikidata | fetchwikidata=ALL}}`,
+                    'nl': `{{Infobox persoon Wikidata}}`,
+                    'pap': `{{Infobox persona}}`
+                }[language] || `{{Infobox person/Wikidata | fetchwikidata=ALL}}`;
+                
+                // Birth information
+                let birthInfo = '';
+                if (birthDate) {
+                    const formattedDate = formatDate(birthDate, language);
+                    const birthText = {
+                        'en': `(${formattedDate}) is`,
+                        'nl': `(${formattedDate}) is een`,
+                        'pap': `(${formattedDate}) ta un`
+                    }[language] || `(${formattedDate}) is`;
+                    
+                    if (birthPlace) {
+                        birthInfo = birthText.replace(')', `, ${birthPlace})`);
+                    } else {
+                        birthInfo = birthText;
+                    }
+                }
+                
+                // Occupation/description
+                let occupationText = '';
+                if (occupation) {
+                    // This is a simplified version - you'd want to resolve the Q-identifier to the actual occupation name
+                    occupationText = {
+                        'en': `${description || 'a person'}`,
+                        'nl': `${description || 'persoon'}`,
+                        'pap': `${description || 'un persona'}`
+                    }[language];
+                } else {
+                    occupationText = {
+                        'en': `${description || 'a person'}`,
+                        'nl': `${description || 'persoon'}`,
+                        'pap': `${description || 'un persona'}`
+                    }[language];
+                }
+                
+                const headers = {
+                    'en': {
+                        life: 'Early life',
+                        career: 'Career',
+                        work: 'Works',
+                        personal: 'Personal life',
+                        external: 'External links',
+                        references: 'References'
+                    },
+                    'nl': {
+                        life: 'Leven en werk',
+                        career: 'Loopbaan',
+                        work: 'Werk',
+                        personal: 'Persoonlijk leven',
+                        external: 'Externe links',
+                        references: 'Bronnen, noten en referenties'
+                    },
+                    'pap': {
+                        life: 'Bida i obra',
+                        career: 'Kariera',
+                        work: 'Obra',
+                        personal: 'Bida personal',
+                        external: 'Link eksterno',
+                        references: 'Referencia'
+                    }
+                }[language];
+                
+            return wikitext;
+        }
         }
                 wikitext = `{{Infobox person
 |name        = ${label}
