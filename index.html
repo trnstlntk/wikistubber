@@ -102,7 +102,7 @@
             </ol>
             
             <div class="flex justify-end">
-                <button id="startButton" class="wikimedia-button py-2 px-6 rounded-md font-medium">Get Started →</button>
+                <button id="startButton" onclick="testFunction(); showStep(2);" class="wikimedia-button py-2 px-6 rounded-md font-medium">Get Started →</button>
             </div>
         </section>
 
@@ -274,6 +274,14 @@
     </footer>
 
     <script>
+        console.log('Script tag executed');
+        
+        // Test simple function
+        function testFunction() {
+            console.log('Test function called');
+            alert('JavaScript is working!');
+        }
+        
         // Global variables
         let selectedItem = null;
         let currentLanguage = 'en';
