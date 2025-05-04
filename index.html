@@ -65,7 +65,7 @@
         <div class="max-w-7xl mx-auto py-4 px-6">
             <div class="flex justify-between items-center">
                 <div class="flex items-center">
-                    <img src="/api/placeholder/50/50" alt="WikiStubber Logo" class="h-12 w-12 mr-3">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Wikidata_logo_without_paddings.svg/120px-Wikidata_logo_without_paddings.svg.png" alt="WikiStubber Logo" class="h-12 w-12 mr-3">
                     <h1 class="text-3xl font-bold text-gray-800">WikiStubber</h1>
                 </div>
                 <p class="text-sm text-gray-500">Create Wikipedia stubs from Wikidata with ease</p>
@@ -177,7 +177,7 @@
             
             <div id="selectedItemInfo" class="mb-6 p-4 bg-blue-50 rounded-lg">
                 <div class="flex items-start">
-                    <img id="selectedItemImage" src="/api/placeholder/100/100" alt="No image available" class="w-24 h-24 object-cover rounded mr-4">
+                    <img id="selectedItemImage" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Wikipedia%27s_W.svg/100px-Wikipedia%27s_W.svg.png" alt="No image available" class="w-24 h-24 object-cover rounded mr-4">
                     <div>
                         <h3 id="selectedItemLabel" class="text-xl font-bold"></h3>
                         <p id="selectedItemDescription" class="text-gray-600"></p>
@@ -192,7 +192,7 @@
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Target Wikipedia:</label>
                 <div id="targetWikipedia" class="flex items-center text-lg">
-                    <img id="languageFlag" src="/api/placeholder/24/16" alt="Language flag" class="w-6 h-4 mr-2">
+                    <img id="languageFlag" src="https://flagcdn.com/h20/us.png" alt="Language flag" class="w-6 h-4 mr-2">
                     <span id="languageName">English</span> Wikipedia
                 </div>
             </div>
@@ -419,7 +419,22 @@
             });
         });
 
-        // Navigation functions
+        // Function to get country code for flags
+        function getCountryCodeForLanguage(langCode) {
+            const languageToCountry = {
+                'en': 'us',
+                'es': 'es',
+                'fr': 'fr',
+                'de': 'de',
+                'nl': 'nl',
+                'it': 'it',
+                'pt': 'pt',
+                'ru': 'ru',
+                'ja': 'jp',
+                'zh': 'cn'
+            };
+            return languageToCountry[langCode] || 'un';
+        }
         function showStep(stepNumber) {
             console.log('Showing step:', stepNumber);
             document.querySelectorAll('.step').forEach(step => {
@@ -566,7 +581,7 @@
                 
                 const imageUrl = item.image 
                     ? item.image
-                    : '/api/placeholder/80/80';
+                    : 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Wikipedia%27s_W.svg/80px-Wikipedia%27s_W.svg.png';
                 
                 itemElement.innerHTML = `
                     <div class="flex">
@@ -616,10 +631,14 @@
             document.getElementById('selectedItemId').textContent = selectedItem.id;
             document.getElementById('selectedItemType').textContent = selectedItem.typeLabel || 'Generic Item';
             
-            const imageUrl = selectedItem.image || '/api/placeholder/100/100';
+            const imageUrl = selectedItem.image || 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Wikipedia%27s_W.svg/100px-Wikipedia%27s_W.svg.png';
             document.getElementById('selectedItemImage').src = imageUrl;
             
             document.getElementById('languageName').textContent = languageNames[currentLanguage];
+            
+            // Update flag
+            const countryCode = getCountryCodeForLanguage(currentLanguage);
+            document.getElementById('languageFlag').src = `https://flagcdn.com/h20/${countryCode}.png`;
         }
 
         // Generate article based on Wikidata item and selected language
