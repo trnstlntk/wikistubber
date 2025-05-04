@@ -145,7 +145,7 @@
                     throw new Error('Item not found');
                 }
                 
-                const wikitext = generateWikitext(itemData, language);
+                const wikitext = generateWikitext(itemData, language, qid);
                 
                 // Display results
                 document.getElementById('resultSection').style.display = 'block';
@@ -193,7 +193,7 @@
             if (itemData.labels && itemData.labels.en) {
                 return itemData.labels.en.value;
             }
-            return qid;
+            return itemData.id;
         }
 
         function getDescription(itemData, language) {
@@ -242,10 +242,9 @@
             return 'Generic item';
         }
 
-        function generateWikitext(itemData, language) {
+        function generateWikitext(itemData, language, qid) {
             const itemType = getItemType(itemData);
             const label = getLabel(itemData, language);
-            const qid = itemData.id;
             
             let wikitext = '';
             
