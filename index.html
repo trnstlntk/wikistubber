@@ -7,27 +7,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        .loading-spinner {
-            display: none;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .step {
-            display: none;
-        }
-        #step1 {
-            display: block;
-        }
-        .wikidata-item:hover {
-            background-color: #f0f7ff;
-        }
-        .selected {
-            background-color: #e6f0ff !important;
-            border-color: #3b82f6 !important;
-        }
         .wikimedia-button {
             background-color: #36c;
             color: white;
@@ -35,28 +14,17 @@
         .wikimedia-button:hover {
             background-color: #2a4b8d;
         }
-        #stepsIndicator .step-indicator {
-            width: 30px;
-            height: 30px;
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
             border-radius: 50%;
-            background-color: #e5e7eb;
-            color: #6b7280;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
         }
-        #stepsIndicator .step-indicator.active {
-            background-color: #36c;
-            color: white;
-        }
-        #stepsIndicator .step-line {
-            flex-grow: 1;
-            height: 2px;
-            background-color: #e5e7eb;
-        }
-        #stepsIndicator .step-line.active {
-            background-color: #36c;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -68,740 +36,368 @@
                     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Wikidata_logo_without_paddings.svg/120px-Wikidata_logo_without_paddings.svg.png" alt="WikiStubber Logo" class="h-12 w-12 mr-3">
                     <h1 class="text-3xl font-bold text-gray-800">WikiStubber</h1>
                 </div>
-                <p class="text-sm text-gray-500">Create Wikipedia stubs from Wikidata with ease</p>
             </div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto py-8 px-6">
-        <div id="stepsIndicator" class="flex items-center justify-between mb-10">
-            <div class="step-indicator active">1</div>
-            <div class="step-line"></div>
-            <div class="step-indicator">2</div>
-            <div class="step-line"></div>
-            <div class="step-indicator">3</div>
-            <div class="step-line"></div>
-            <div class="step-indicator">4</div>
-        </div>
-
-        <!-- Step 1: Introduction -->
-        <section id="step1" class="step bg-white p-8 rounded-lg shadow-md">
-            <h2 class="text-2xl font-bold mb-4">Welcome to WikiStubber!</h2>
-            <p class="mb-6">This tool helps you create Wikipedia articles based on existing Wikidata entries. We'll guide you through selecting a subject, choosing a language, and generating a Wikipedia draft that you can further develop.</p>
+        <div class="bg-white p-8 rounded-lg shadow-md mb-8">
+            <h2 class="text-2xl font-bold mb-4">Generate Wikipedia Stub from Wikidata</h2>
+            <p class="mb-6 text-gray-600">Enter a Wikidata item (like Q1234 or full URL) and select a language to create a Wikipedia draft.</p>
             
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-                <p class="font-medium">For this initial version, we're focusing on <span class="font-bold">NADD creators</span> - a collection documented in Wikidata with property P5008 and value Q133504755.</p>
-            </div>
-            
-            <h3 class="text-xl font-semibold mb-2">How it works:</h3>
-            <ol class="list-decimal ml-6 mb-6 space-y-2">
-                <li>Browse and select a Wikidata item about a NADD creator</li>
-                <li>Choose which language Wikipedia you want to create the article for</li>
-                <li>Generate a Wikipedia stub based on Wikidata information</li>
-                <li>Save the stub to your Wikipedia user space to continue working on it</li>
-            </ol>
-            
-            <div class="flex justify-end">
-                <button id="startButton" onclick="testFunction(); showStep(2);" class="wikimedia-button py-2 px-6 rounded-md font-medium">Get Started →</button>
-            </div>
-        </section>
-
-        <!-- Step 2: Select Wikidata Item -->
-        <section id="step2" class="step bg-white p-8 rounded-lg shadow-md">
-            <h2 class="text-2xl font-bold mb-4">Select a NADD Creator</h2>
-            <p class="mb-4">Browse through NADD creators without Wikipedia articles in your chosen language:</p>
-            
-            <div class="mb-6 flex flex-wrap gap-4">
+            <div class="grid md:grid-cols-3 gap-6">
                 <div>
-                    <label for="languageSelect" class="block text-sm font-medium text-gray-700 mb-1">Target Wikipedia Language:</label>
-                    <select id="languageSelect" class="border border-gray-300 rounded-md px-3 py-2 w-48">
-                        <option value="en">English</option>
-                        <option value="es">Spanish</option>
-                        <option value="fr">French</option>
-                        <option value="de">German</option>
-                        <option value="nl">Dutch</option>
-                        <option value="it">Italian</option>
-                        <option value="pt">Portuguese</option>
-                        <option value="ru">Russian</option>
-                        <option value="ja">Japanese</option>
-                        <option value="zh">Chinese</option>
-                    </select>
+                    <label for="wikidataInput" class="block text-sm font-medium text-gray-700 mb-1">Wikidata Item:</label>
+                    <input type="text" id="wikidataInput" placeholder="Q1234 or full URL" 
+                           class="w-full border border-gray-300 rounded-md px-3 py-2">
                 </div>
-                <div>
-                    <label for="entityTypeFilter" class="block text-sm font-medium text-gray-700 mb-1">Entity Type:</label>
-                    <select id="entityTypeFilter" class="border border-gray-300 rounded-md px-3 py-2 w-48">
-                        <option value="all">All Types</option>
-                        <option value="Q5">Human</option>
-                        <option value="Q43229">Organization</option>
-                        <option value="Q1190554">Artistic Group</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-1">Search:</label>
-                    <input type="text" id="searchInput" placeholder="Search by name..." class="border border-gray-300 rounded-md px-3 py-2 w-full">
-                </div>
-            </div>
-
-            <div class="mb-4 flex justify-between items-center">
-                <button id="refreshButton" class="flex items-center text-blue-600 hover:text-blue-800">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    Refresh List
-                </button>
-                <div id="itemsCount" class="text-sm text-gray-500"></div>
-            </div>
-
-            <div class="relative">
-                <div id="loadingSpinner" class="loading-spinner flex justify-center my-8">
-                    <svg class="animate-spin h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
-                <div id="wikidataItemsList" class="space-y-3 max-h-96 overflow-y-auto px-1"></div>
-                <div id="noResultsMessage" class="hidden text-center py-8 text-gray-500">
-                    No items found matching your criteria.
-                </div>
-            </div>
-
-            <div class="flex justify-between mt-6">
-                <button id="prevToIntro" class="border border-gray-300 hover:bg-gray-50 py-2 px-4 rounded-md">← Back</button>
-                <button id="nextToLanguage" class="wikimedia-button py-2 px-6 rounded-md font-medium opacity-50 cursor-not-allowed" disabled>Next →</button>
-            </div>
-        </section>
-
-        <!-- Step 3: Generate Article -->
-        <section id="step3" class="step bg-white p-8 rounded-lg shadow-md">
-            <h2 class="text-2xl font-bold mb-4">Generate Wikipedia Stub</h2>
-            
-            <div id="selectedItemInfo" class="mb-6 p-4 bg-blue-50 rounded-lg">
-                <div class="flex items-start">
-                    <img id="selectedItemImage" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Wikipedia%27s_W.svg/100px-Wikipedia%27s_W.svg.png" alt="No image available" class="w-24 h-24 object-cover rounded mr-4">
-                    <div>
-                        <h3 id="selectedItemLabel" class="text-xl font-bold"></h3>
-                        <p id="selectedItemDescription" class="text-gray-600"></p>
-                        <div class="mt-2">
-                            <span id="selectedItemId" class="bg-gray-200 text-gray-700 px-2 py-1 rounded text-sm"></span>
-                            <span id="selectedItemType" class="bg-blue-200 text-blue-800 px-2 py-1 rounded text-sm ml-2"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Target Wikipedia:</label>
-                <div id="targetWikipedia" class="flex items-center text-lg">
-                    <img id="languageFlag" src="https://flagcdn.com/h20/us.png" alt="Language flag" class="w-6 h-4 mr-2">
-                    <span id="languageName">English</span> Wikipedia
-                </div>
-            </div>
-
-            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
-                <p class="text-yellow-700">We'll generate a Wikipedia stub based on information available in Wikidata. You'll be able to review and edit it before publishing.</p>
-            </div>
-
-            <div class="flex justify-between mt-6">
-                <button id="prevToSelect" class="border border-gray-300 hover:bg-gray-50 py-2 px-4 rounded-md">← Back</button>
-                <button id="generateArticle" class="wikimedia-button py-2 px-6 rounded-md font-medium">
-                    <span>Generate Stub</span>
-                    <span class="loading-spinner ml-2 hidden">
-                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </span>
-                </button>
-            </div>
-        </section>
-
-        <!-- Step 4: Review and Copy -->
-        <section id="step4" class="step bg-white p-8 rounded-lg shadow-md">
-            <h2 class="text-2xl font-bold mb-4">Your Wikipedia Stub is Ready!</h2>
-            
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold mb-2">Preview:</h3>
-                <div id="wikiPreview" class="border rounded-md p-4 bg-gray-50 overflow-auto max-h-64 mb-4"></div>
                 
-                <div class="flex justify-end mb-6">
-                    <button id="copyWikitext" class="flex items-center text-white bg-green-600 hover:bg-green-700 py-2 px-4 rounded-md">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        Copy Wikitext
+                <div>
+                    <label for="languageSelect" class="block text-sm font-medium text-gray-700 mb-1">Wikipedia Language:</label>
+                    <select id="languageSelect" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                        <option value="en">English</option>
+                        <option value="nl">Dutch</option>
+                        <option value="pap">Papiamento</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-end">
+                    <button id="generateButton" onclick="generateStub()" class="wikimedia-button w-full py-2 px-6 rounded-md font-medium">
+                        Generate Stub
                     </button>
                 </div>
-                
-                <h3 class="text-lg font-semibold mb-2">Wikitext:</h3>
-                <textarea id="wikitextOutput" class="w-full h-64 border rounded-md p-4 font-mono text-sm" readonly></textarea>
-            </div>
-
-            <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
-                <h4 class="font-bold text-green-800 mb-2">Next Steps:</h4>
-                <ol class="list-decimal ml-6 space-y-2 text-green-800">
-                    <li>Copy the wikitext above</li>
-                    <li>Go to <a id="userPageLink" href="#" target="_blank" class="text-blue-600 hover:underline"></a></li>
-                    <li>Paste the wikitext and continue editing</li>
-                    <li>Save the page when you're ready</li>
-                    <li>Once finished, you can move it to the main namespace!</li>
-                </ol>
-            </div>
-
-            <div class="flex justify-between mt-6">
-                <button id="prevToGenerate" class="border border-gray-300 hover:bg-gray-50 py-2 px-4 rounded-md">← Back</button>
-                <button id="startOver" class="wikimedia-button py-2 px-6 rounded-md font-medium">Start Over</button>
-            </div>
-        </section>
-    </main>
-
-    <footer class="bg-gray-100 mt-12 py-6 border-t">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <p class="text-gray-600 mb-4 md:mb-0">WikiStubber: Create Wikipedia stubs from Wikidata with ease</p>
-                <div class="flex space-x-4">
-                    <a href="https://github.com/yourusername/wikistubber" target="_blank" class="text-gray-600 hover:text-gray-900">
-                        <i class="fab fa-github"></i> GitHub
-                    </a>
-                    <a href="https://www.wikidata.org/" target="_blank" class="text-gray-600 hover:text-gray-900">
-                        <i class="fas fa-database"></i> Wikidata
-                    </a>
-                    <a href="https://www.wikipedia.org/" target="_blank" class="text-gray-600 hover:text-gray-900">
-                        <i class="fab fa-wikipedia-w"></i> Wikipedia
-                    </a>
-                </div>
             </div>
         </div>
-    </footer>
+
+        <div id="resultSection" style="display: none;" class="bg-white p-8 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold mb-4">Generated Wikipedia Stub</h3>
+            
+            <div id="itemInfo" class="mb-6 p-4 bg-blue-50 rounded-lg"></div>
+            
+            <div class="mb-4">
+                <h4 class="font-semibold text-gray-700">Preview:</h4>
+                <div id="preview" class="border rounded-md p-4 bg-gray-50 mb-4 prose max-w-none"></div>
+            </div>
+            
+            <div class="mb-4">
+                <h4 class="font-semibold text-gray-700">Wikitext to copy:</h4>
+                <textarea id="wikitextOutput" class="w-full h-64 border rounded-md p-4 font-mono text-sm mb-2"></textarea>
+                <button onclick="copyToClipboard()" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md">
+                    Copy to Clipboard
+                </button>
+            </div>
+            
+            <div id="instructions" class="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400">
+                <h4 class="font-bold text-yellow-800 mb-2">Next Steps:</h4>
+                <ol class="list-decimal ml-6 text-yellow-800">
+                    <li class="mb-1">Copy the wikitext above</li>
+                    <li class="mb-1">Go to <span id="userPageLink" class="font-bold"></span></li>
+                    <li class="mb-1">Create a new page with the article title</li>
+                    <li class="mb-1">Paste the wikitext and add more information</li>
+                    <li>Save the page when ready</li>
+                </ol>
+            </div>
+        </div>
+    </main>
 
     <script>
-        console.log('Script tag executed');
-        
-        // Test simple function
-        function testFunction() {
-            console.log('Test function called');
-            alert('JavaScript is working!');
-        }
-        
-        // Global variables
-        let selectedItem = null;
-        let currentLanguage = 'en';
-        let wikidataItems = [];
         const languageNames = {
             'en': 'English',
-            'es': 'Spanish',
-            'fr': 'French',  
-            'de': 'German',
-            'nl': 'Dutch',
-            'it': 'Italian',
-            'pt': 'Portuguese',
-            'ru': 'Russian',
-            'ja': 'Japanese',
-            'zh': 'Chinese'
+            'nl': 'Dutch', 
+            'pap': 'Papiamento'
         };
 
-        // Document ready function
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded');
+        function extractQid(input) {
+            // Remove any whitespace
+            input = input.trim();
             
-            // Step navigation
-            document.getElementById('startButton').addEventListener('click', function() {
-                console.log('Start button clicked');
-                showStep(2);
-                fetchWikidataItems();
-            });
-        
-        // Debug check
-        console.log('Script loaded successfully');
-        console.log('Start button element:', document.getElementById('startButton'));
-            
-            document.getElementById('prevToIntro').addEventListener('click', function() {
-                showStep(1);
-            });
-            
-            document.getElementById('nextToLanguage').addEventListener('click', function() {
-                if (selectedItem) {
-                    showStep(3);
-                    displaySelectedItemInfo();
-                }
-            });
-            
-            document.getElementById('prevToSelect').addEventListener('click', function() {
-                showStep(2);
-            });
-            
-            document.getElementById('generateArticle').addEventListener('click', generateArticle);
-            
-            document.getElementById('prevToGenerate').addEventListener('click', function() {
-                showStep(3);
-            });
-            
-            document.getElementById('startOver').addEventListener('click', function() {
-                selectedItem = null;
-                document.getElementById('nextToLanguage').disabled = true;
-                document.getElementById('nextToLanguage').classList.add('opacity-50', 'cursor-not-allowed');
-                showStep(1);
-            });
-            
-            // Item filtering
-            document.getElementById('languageSelect').addEventListener('change', fetchWikidataItems);
-            document.getElementById('refreshButton').addEventListener('click', fetchWikidataItems);
-            
-            document.getElementById('entityTypeFilter').addEventListener('change', displayWikidataItems);
-            document.getElementById('searchInput').addEventListener('input', displayWikidataItems);
-            
-            // Copy wikitext button
-            document.getElementById('copyWikitext').addEventListener('click', function() {
-                const textarea = document.getElementById('wikitextOutput');
-                textarea.select();
-                document.execCommand('copy');
-                
-                // Show copied feedback
-                const button = document.getElementById('copyWikitext');
-                const originalText = button.innerHTML;
-                button.innerHTML = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>Copied!`;
-                
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                }, 2000);
-            });
-        });
-            // Step navigation
-            document.getElementById('startButton').addEventListener('click', () => {
-                showStep(2);
-                fetchWikidataItems();
-            });
-            
-            document.getElementById('prevToIntro').addEventListener('click', () => {
-                showStep(1);
-            });
-            
-            document.getElementById('nextToLanguage').addEventListener('click', () => {
-                if (selectedItem) {
-                    showStep(3);
-                    displaySelectedItemInfo();
-                }
-            });
-            
-            document.getElementById('prevToSelect').addEventListener('click', () => {
-                showStep(2);
-            });
-            
-            document.getElementById('generateArticle').addEventListener('click', generateArticle);
-            
-            document.getElementById('prevToGenerate').addEventListener('click', () => {
-                showStep(3);
-            });
-            
-            document.getElementById('startOver').addEventListener('click', () => {
-                selectedItem = null;
-                document.getElementById('nextToLanguage').disabled = true;
-                document.getElementById('nextToLanguage').classList.add('opacity-50', 'cursor-not-allowed');
-                showStep(1);
-            });
-            
-            // Item filtering
-            document.getElementById('languageSelect').addEventListener('change', fetchWikidataItems);
-            document.getElementById('refreshButton').addEventListener('click', fetchWikidataItems);
-            
-            document.getElementById('entityTypeFilter').addEventListener('change', displayWikidataItems);
-            document.getElementById('searchInput').addEventListener('input', displayWikidataItems);
-            
-            // Copy wikitext button
-            document.getElementById('copyWikitext').addEventListener('click', () => {
-                const textarea = document.getElementById('wikitextOutput');
-                textarea.select();
-                document.execCommand('copy');
-                
-                // Show copied feedback
-                const button = document.getElementById('copyWikitext');
-                const originalText = button.innerHTML;
-                button.innerHTML = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>Copied!`;
-                
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                }, 2000);
-            });
-        });
-
-        // Function to get country code for flags
-        function getCountryCodeForLanguage(langCode) {
-            const languageToCountry = {
-                'en': 'us',
-                'es': 'es',
-                'fr': 'fr',
-                'de': 'de',
-                'nl': 'nl',
-                'it': 'it',
-                'pt': 'pt',
-                'ru': 'ru',
-                'ja': 'jp',
-                'zh': 'cn'
-            };
-            return languageToCountry[langCode] || 'un';
-        }
-        function showStep(stepNumber) {
-            console.log('Showing step:', stepNumber);
-            document.querySelectorAll('.step').forEach(step => {
-                step.style.display = 'none';
-            });
-            
-            const targetStep = document.getElementById(`step${stepNumber}`);
-            if (targetStep) {
-                targetStep.style.display = 'block';
-            } else {
-                console.error(`Step ${stepNumber} not found`);
+            // If it starts with Q and has numbers, it's already a QID
+            if (/^Q\d+$/.test(input)) {
+                return input;
             }
             
-            // Update step indicators
-            document.querySelectorAll('#stepsIndicator .step-indicator').forEach((indicator, index) => {
-                if (index < stepNumber) {
-                    indicator.classList.add('active');
-                } else {
-                    indicator.classList.remove('active');
-                }
-            });
-            
-            document.querySelectorAll('#stepsIndicator .step-line').forEach((line, index) => {
-                if (index < stepNumber - 1) {
-                    line.classList.add('active');
-                } else {
-                    line.classList.remove('active');
-                }
-            });
-        }
-
-        // SPARQL query for NADD creators
-        function buildNADDCreatorsQuery(language) {
-            return `
-            SELECT ?item ?itemLabel ?itemDescription ?image ?type ?typeLabel 
-            WHERE {
-                ?item wdt:P5008 wd:Q133504755.  # Items with NADD creators property
-                OPTIONAL { ?item wdt:P31 ?type. }  # Instance of (type)
-                OPTIONAL { ?item wdt:P18 ?image. }  # Image if available
-                
-                # Check if Wikipedia article doesn't exist in the selected language
-                FILTER NOT EXISTS { 
-                    ?article schema:about ?item;
-                            schema:isPartOf <https://${language}.wikipedia.org/>.
-                }
-                
-                SERVICE wikibase:label { 
-                    bd:serviceParam wikibase:language "${language},en". 
-                    ?item rdfs:label ?itemLabel.
-                    ?item schema:description ?itemDescription.
-                    ?type rdfs:label ?typeLabel.
-                }
+            // Try to extract QID from a URL
+            const match = input.match(/Q\d+/);
+            if (match) {
+                return match[0];
             }
-            ORDER BY ?itemLabel
-            LIMIT 100`;
+            
+            return null;
         }
 
-        // Fetch items from Wikidata
-        async function fetchWikidataItems() {
+        async function generateStub() {
+            const input = document.getElementById('wikidataInput').value;
             const language = document.getElementById('languageSelect').value;
-            currentLanguage = language;
+            const qid = extractQid(input);
             
-            document.getElementById('loadingSpinner').style.display = 'flex';
-            document.getElementById('wikidataItemsList').innerHTML = '';
-            document.getElementById('itemsCount').textContent = '';
-            document.getElementById('noResultsMessage').classList.add('hidden');
-            
-            const query = buildNADDCreatorsQuery(language);
-            const url = `https://query.wikidata.org/sparql?query=${encodeURIComponent(query)}&format=json`;
-            
-            try {
-                const response = await fetch(url, {
-                    headers: {
-                        'Accept': 'application/sparql-results+json',
-                        'User-Agent': 'WikiStubber/1.0'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                
-                const data = await response.json();
-                wikidataItems = data.results.bindings.map(item => {
-                    return {
-                        id: item.item.value.split('/').pop(),
-                        label: item.itemLabel?.value || 'Unknown',
-                        description: item.itemDescription?.value || 'No description available',
-                        image: item.image?.value || null,
-                        type: item.type?.value.split('/').pop() || null,
-                        typeLabel: item.typeLabel?.value || 'Unknown'
-                    };
-                });
-                
-                displayWikidataItems();
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                document.getElementById('wikidataItemsList').innerHTML = `
-                    <div class="bg-red-50 border-l-4 border-red-500 p-4">
-                        <p class="text-red-700">Error loading data. Please try again later.</p>
-                    </div>
-                `;
-            } finally {
-                document.getElementById('loadingSpinner').style.display = 'none';
-            }
-        }
-
-        // Display Wikidata items
-        function displayWikidataItems() {
-            const itemsList = document.getElementById('wikidataItemsList');
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const typeFilter = document.getElementById('entityTypeFilter').value;
-            
-            let filteredItems = wikidataItems;
-            
-            // Apply search filter
-            if (searchTerm) {
-                filteredItems = filteredItems.filter(item => 
-                    item.label.toLowerCase().includes(searchTerm) || 
-                    item.description.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            // Apply type filter
-            if (typeFilter !== 'all') {
-                filteredItems = filteredItems.filter(item => item.type === typeFilter);
-            }
-            
-            if (filteredItems.length === 0) {
-                itemsList.innerHTML = '';
-                document.getElementById('noResultsMessage').classList.remove('hidden');
-                document.getElementById('itemsCount').textContent = 'No results';
+            if (!qid) {
+                alert('Please enter a valid Wikidata identifier (Q###) or URL');
                 return;
             }
             
-            document.getElementById('noResultsMessage').classList.add('hidden');
-            document.getElementById('itemsCount').textContent = `${filteredItems.length} items`;
-            
-            itemsList.innerHTML = '';
-            filteredItems.forEach(item => {
-                const itemElement = document.createElement('div');
-                itemElement.className = 'wikidata-item border rounded-lg p-4 hover:shadow-md cursor-pointer transition-all';
-                itemElement.dataset.id = item.id;
-                
-                const imageUrl = item.image 
-                    ? item.image
-                    : 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Wikipedia%27s_W.svg/80px-Wikipedia%27s_W.svg.png';
-                
-                itemElement.innerHTML = `
-                    <div class="flex">
-                        <img src="${imageUrl}" alt="${item.label}" class="w-20 h-20 object-cover rounded mr-4">
-                        <div class="flex-1">
-                            <h3 class="text-lg font-semibold">${item.label}</h3>
-                            <p class="text-gray-600 text-sm">${item.description}</p>
-                            <div class="mt-2">
-                                <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs">${item.id}</span>
-                                ${item.typeLabel ? `<span class="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs ml-2">${item.typeLabel}</span>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                itemElement.addEventListener('click', () => {
-                    // Deselect all other items
-                    document.querySelectorAll('.wikidata-item').forEach(el => {
-                        el.classList.remove('selected');
-                        el.classList.remove('border-blue-500');
-                        el.classList.add('border-gray-200');
-                    });
-                    
-                    // Select this item
-                    itemElement.classList.add('selected');
-                    itemElement.classList.remove('border-gray-200');
-                    itemElement.classList.add('border-blue-500');
-                    
-                    // Enable next button
-                    document.getElementById('nextToLanguage').disabled = false;
-                    document.getElementById('nextToLanguage').classList.remove('opacity-50', 'cursor-not-allowed');
-                    
-                    // Store selected item
-                    selectedItem = filteredItems.find(i => i.id === item.id);
-                });
-                
-                itemsList.appendChild(itemElement);
-            });
-        }
-
-        // Display selected item information
-        function displaySelectedItemInfo() {
-            if (!selectedItem) return;
-            
-            document.getElementById('selectedItemLabel').textContent = selectedItem.label;
-            document.getElementById('selectedItemDescription').textContent = selectedItem.description;
-            document.getElementById('selectedItemId').textContent = selectedItem.id;
-            document.getElementById('selectedItemType').textContent = selectedItem.typeLabel || 'Generic Item';
-            
-            const imageUrl = selectedItem.image || 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Wikipedia%27s_W.svg/100px-Wikipedia%27s_W.svg.png';
-            document.getElementById('selectedItemImage').src = imageUrl;
-            
-            document.getElementById('languageName').textContent = languageNames[currentLanguage];
-            
-            // Update flag
-            const countryCode = getCountryCodeForLanguage(currentLanguage);
-            document.getElementById('languageFlag').src = `https://flagcdn.com/h20/${countryCode}.png`;
-        }
-
-        // Generate article based on Wikidata item and selected language
-        async function generateArticle() {
-            if (!selectedItem) return;
-            
-            const generateButton = document.getElementById('generateArticle');
-            const loadingSpinner = generateButton.querySelector('.loading-spinner');
-            
-            // Show loading state
-            generateButton.disabled = true;
-            generateButton.querySelector('span:not(.loading-spinner)').textContent = 'Generating...';
-            loadingSpinner.classList.remove('hidden');
+            const button = document.getElementById('generateButton');
+            button.innerHTML = '<span class="loading mr-2"></span> Generating...';
+            button.disabled = true;
             
             try {
-                // Fetch detailed information about the item
-                const itemData = await fetchItemDetails(selectedItem.id);
+                const itemData = await fetchWikidataItem(qid);
+                if (!itemData) {
+                    throw new Error('Item not found');
+                }
                 
-                // Generate wikitext based on item type and data
-                const wikitext = generateWikitext(itemData);
+                const wikitext = generateWikitext(itemData, language);
                 
-                // Display the generated article
+                // Display results
+                document.getElementById('resultSection').style.display = 'block';
                 document.getElementById('wikitextOutput').value = wikitext;
                 
-                // Create HTML preview
-                const parser = new DOMParser();
-                // Very basic conversion of wikitext to HTML for preview
-                let htmlPreview = wikitext
-                    .replace(/==\s*([^=]+)\s*==/g, '<h2>$1</h2>')
-                    .replace(/===\s*([^=]+)\s*===/g, '<h3>$1</h3>')
-                    .replace(/\[\[([^\]|]+)\]\]/g, '<a href="#">$1</a>')
-                    .replace(/\[\[([^\]]+)\|([^\]]+)\]\]/g, '<a href="#">$2</a>')
-                    .replace(/\n\n/g, '<br><br>');
+                // Show item info
+                displayItemInfo(itemData, language);
                 
-                document.getElementById('wikiPreview').innerHTML = htmlPreview;
+                // Create preview (basic wikitext to HTML conversion)
+                const preview = convertToPreview(wikitext);
+                document.getElementById('preview').innerHTML = preview;
                 
                 // Set user page link
-                const articleTitle = selectedItem.label.replace(/ /g, '_');
+                const articleTitle = getLabel(itemData, language).replace(/ /g, '_');
                 const userPageLink = document.getElementById('userPageLink');
-                userPageLink.href = `https://${currentLanguage}.wikipedia.org/wiki/Special:MyPage/${articleTitle}`;
-                userPageLink.textContent = `${languageNames[currentLanguage]} Wikipedia (Special:MyPage/${articleTitle})`;
+                userPageLink.textContent = `https://${language}.wikipedia.org/wiki/Special:MyPage/${articleTitle}`;
                 
-                // Move to next step
-                showStep(4);
+                document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+                
             } catch (error) {
-                console.error('Error generating article:', error);
-                alert('Error generating article. Please try again.');
+                alert('Error generating stub: ' + error.message);
+                console.error(error);
             } finally {
-                // Reset button state
-                generateButton.disabled = false;
-                generateButton.querySelector('span:not(.loading-spinner)').textContent = 'Generate Stub';
-                loadingSpinner.classList.add('hidden');
+                button.innerHTML = 'Generate Stub';
+                button.disabled = false;
             }
         }
 
-        // Fetch detailed information about an item from Wikidata
-        async function fetchItemDetails(itemId) {
-            const url = `https://www.wikidata.org/wiki/Special:EntityData/${itemId}.json`;
+        async function fetchWikidataItem(qid) {
+            const url = `https://www.wikidata.org/wiki/Special:EntityData/${qid}.json`;
+            const response = await fetch(url);
             
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch item details');
-                }
-                
-                const data = await response.json();
-                return data.entities[itemId];
-            } catch (error) {
-                console.error('Error fetching item details:', error);
-                throw error;
+            if (!response.ok) {
+                throw new Error('Failed to fetch Wikidata item');
             }
+            
+            const data = await response.json();
+            return data.entities[qid];
         }
 
-        // Generate wikitext based on item data
-        function generateWikitext(itemData) {
-            const language = currentLanguage;
-            const claims = itemData.claims || {};
-            const labels = itemData.labels || {};
-            const descriptions = itemData.descriptions || {};
+        function getLabel(itemData, language) {
+            if (itemData.labels && itemData.labels[language]) {
+                return itemData.labels[language].value;
+            }
+            if (itemData.labels && itemData.labels.en) {
+                return itemData.labels.en.value;
+            }
+            return qid;
+        }
+
+        function getDescription(itemData, language) {
+            if (itemData.descriptions && itemData.descriptions[language]) {
+                return itemData.descriptions[language].value;
+            }
+            if (itemData.descriptions && itemData.descriptions.en) {
+                return itemData.descriptions.en.value;
+            }
+            return '';
+        }
+
+        function displayItemInfo(itemData, language) {
+            const label = getLabel(itemData, language);
+            const description = getDescription(itemData, language);
+            const itemType = getItemType(itemData);
             
-            // Get item label in current language or fall back to English
-            const itemLabel = labels[language]?.value || labels.en?.value || 'Unknown';
+            let html = `
+                <div class="flex items-start">
+                    <div>
+                        <h4 class="text-lg font-bold">${label}</h4>
+                        <p class="text-gray-600">${description}</p>
+                        <p class="text-sm text-gray-500 mt-1">
+                            <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded mr-2">${itemData.id}</span>
+                            <span class="bg-blue-200 text-blue-800 px-2 py-1 rounded">${itemType}</span>
+                        </p>
+                    </div>
+                </div>
+            `;
             
-            // Get item description
-            const itemDescription = descriptions[language]?.value || descriptions.en?.value || '';
-            
-            // Determine the item type
-            let itemType = 'generic';
-            if (claims.P31) {
-                const instanceIds = claims.P31.map(statement => statement.mainsnak.datavalue?.value.id);
-                if (instanceIds.includes('Q5')) {
-                    itemType = 'human';
-                } else if (instanceIds.includes('Q43229') || instanceIds.includes('Q1190554')) {
-                    itemType = 'organization';
-                }
+            document.getElementById('itemInfo').innerHTML = html;
+        }
+
+        function getItemType(itemData) {
+            if (!itemData.claims || !itemData.claims.P31) {
+                return 'Generic item';
             }
             
-            // Generate appropriate infobox and article structure based on item type
+            const instanceClaims = itemData.claims.P31;
+            for (const claim of instanceClaims) {
+                const value = claim.mainsnak.datavalue?.value?.id;
+                if (value === 'Q5') return 'Human';
+                if (value === 'Q43229') return 'Organization';
+            }
+            
+            return 'Generic item';
+        }
+
+        function generateWikitext(itemData, language) {
+            const itemType = getItemType(itemData);
+            const label = getLabel(itemData, language);
+            const qid = itemData.id;
+            
             let wikitext = '';
             
-            if (itemType === 'human') {
-                wikitext = generateHumanArticle(itemData, language);
-            } else if (itemType === 'organization') {
-                wikitext = generateOrganizationArticle(itemData, language);
+            if (itemType === 'Human') {
+                wikitext = `{{Infobox person
+|name        = ${label}
+|image       = <!-- Add image if available -->
+|birth_date  = <!-- {{Wikidata|${qid}|P569|format=df}} -->
+|birth_place = <!-- {{Wikidata|${qid}|P19}} -->
+|death_date  = <!-- {{Wikidata|${qid}|P570|format=df}} -->
+|death_place = <!-- {{Wikidata|${qid}|P20}} -->
+|nationality = <!-- {{Wikidata|${qid}|P27}} -->
+|occupation  = <!-- {{Wikidata|${qid}|P106}} -->
+|education   = <!-- {{Wikidata|${qid}|P69}} -->
+|alma_mater  = <!-- {{Wikidata|${qid}|P69}} -->
+}}
+
+'''${label}''' <!-- Add a brief description here -->
+
+== Early life ==
+<!-- Add information about early life and background -->
+
+== Career ==
+<!-- Add information about their professional work -->
+
+== Personal life ==
+<!-- Add personal details if appropriate -->
+
+== Recognition ==
+<!-- Add awards and recognition -->
+
+== Works ==
+<!-- Add notable publications, art, or other works -->
+
+== References ==
+<references />
+
+== External links ==
+* {{Wikidata Infobox|${qid}}}
+
+{{Authority control}}
+{{DEFAULTSORT:${label.split(' ').pop()}}}
+
+[[Category:]]
+<!-- 
+This stub was created with WikiStubber.
+Please expand this article with more information, references, and reliable sources.
+-->`;
+            } else if (itemType === 'Organization') {
+                wikitext = `{{Infobox organization
+|name         = ${label}
+|image        = <!-- Add logo if available -->
+|formation    = <!-- {{Wikidata|${qid}|P571|format=df}} -->
+|founder      = <!-- {{Wikidata|${qid}|P112}} -->
+|type         = <!-- {{Wikidata|${qid}|P31}} -->
+|headquarters = <!-- {{Wikidata|${qid}|P159}} -->
+|location     = <!-- {{Wikidata|${qid}|P276}} -->
+|key_people   = <!-- {{Wikidata|${qid}|P169}} -->
+|website      = <!-- {{Wikidata|${qid}|P856}} -->
+}}
+
+'''${label}''' <!-- Add a brief description here -->
+
+== History ==
+<!-- Add information about the organization's founding and development -->
+
+== Structure ==
+<!-- Add information about organizational structure -->
+
+== Activities ==
+<!-- Add information about what the organization does -->
+
+== Impact ==
+<!-- Add information about the organization's impact or achievements -->
+
+== Funding ==
+<!-- Add information about funding or support -->
+
+== External links ==
+* {{Wikidata Infobox|${qid}}}
+
+{{Authority control}}
+
+[[Category:]]
+<!-- 
+This stub was created with WikiStubber.
+Please expand this article with more information, references, and reliable sources.
+-->`;
             } else {
-                wikitext = generateGenericArticle(itemData, language);
+                wikitext = `'''${label}''' <!-- Add a brief description here -->
+
+== Overview ==
+<!-- Add general information about this item -->
+
+== Details ==
+<!-- Add more specific details -->
+
+== Related topics ==
+<!-- Add links to related topics -->
+
+== References ==
+<references />
+
+== External links ==
+* {{Wikidata Infobox|${qid}}}
+
+[[Category:]]
+<!-- 
+This stub was created with WikiStubber.
+Please expand this article with more information, references, and reliable sources.
+-->`;
             }
             
             return wikitext;
         }
 
-        // Generate article for a human
-        function generateHumanArticle(itemData, language) {
-            const claims = itemData.claims || {};
-            const labels = itemData.labels || {};
+        function convertToPreview(wikitext) {
+            // Very basic wikitext to HTML conversion for preview
+            let html = wikitext
+                .replace(/\[\[File:[^\]]+\]\]/g, '')
+                .replace(/\[\[Image:[^\]]+\]\]/g, '')
+                .replace(/\{\{Infobox[^}]+\}\}/g, '<div class="border p-4 bg-gray-100 mb-4">Infobox</div>')
+                .replace(/==\s*([^=]+)\s*==/g, '<h2 class="text-xl font-bold mt-4 mb-2">$1</h2>')
+                .replace(/===\s*([^=]+)\s*===/g, '<h3 class="text-lg font-bold mt-3 mb-1">$1</h3>')
+                .replace(/\[\[([^\]|]+)\]\]/g, '<a href="#" class="text-blue-600">$1</a>')
+                .replace(/\[\[([^\]]+)\|([^\]]+)\]\]/g, '<a href="#" class="text-blue-600">$2</a>')
+                .replace(/'''([^']+)'''/g, '<strong>$1</strong>')
+                .replace(/''([^']+)''/g, '<em>$1</em>')
+                .replace(/<!--([^>]*)-->/g, '<span class="text-gray-400"><!-- $1 --></span>')
+                .replace(/\n\n/g, '</p><p class="mb-2">')
+                .replace(/\n/g, '<br>');
             
-            // Get basic info
-            const name = labels[language]?.value || labels.en?.value || 'Unknown';
-            const itemId = itemData.id;
+            return `<p class="mb-2">${html}</p>`;
+        }
+
+        function copyToClipboard() {
+            const textarea = document.getElementById('wikitextOutput');
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            document.execCommand('copy');
             
-            // Start with infobox
-            let wikitext = `{{Infobox person
-|name        = 
-|image       = <!-- {{Wikidata image|${itemId}}} -->
-|birth_date  = <!-- {{Wikidata|${itemId}|P569|format=df}} -->
-|birth_place = <!-- {{Wikidata|${itemId}|P19}} -->
-|death_date  = <!-- {{Wikidata|${itemId}|P570|format=df}} -->
-|death_place = <!-- {{Wikidata|${itemId}|P20}} -->
-|nationality = <!-- {{Wikidata|${itemId}|P27}} -->
-|occupation  = <!-- {{Wikidata|${itemId}|P106}} -->
-}}
-
-'''${name}''' is <!-- Add a brief one-sentence introduction here -->.
-
-== Biography ==
-<!-- Add biographical information here -->
-
-== Career ==
-<!-- Add career information here -->
-
-== Works ==
-<!-- Add notable works here -->
-
-== References ==
-{{Reflist}}
-
-== External links ==
-* {{Wikidata entity|${itemId}}}
-
-{{Authority control}}
-{{DEFAULTSORT:<!-- Add appropriate sort key here -->}}
-
-[[Category:<!-- Add appropriate categories here -->]]
-
-<!-- 
-This article was created using WikiStubber.
-Please enhance it with additional information and references.
--->
+            // Show feedback
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = 'Copied!';
+            button.className = 'bg-green-700 text-white py-2 px-4 rounded-md';
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.className = 'bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
