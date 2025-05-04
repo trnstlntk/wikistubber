@@ -281,7 +281,7 @@
         const languageNames = {
             'en': 'English',
             'es': 'Spanish',
-            'fr': 'French',
+            'fr': 'French',  
             'de': 'German',
             'nl': 'Dutch',
             'it': 'Italian',
@@ -293,34 +293,41 @@
 
         // Document ready function
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            
             // Step navigation
-            document.getElementById('startButton').addEventListener('click', () => {
+            document.getElementById('startButton').addEventListener('click', function() {
+                console.log('Start button clicked');
                 showStep(2);
                 fetchWikidataItems();
             });
+        
+        // Debug check
+        console.log('Script loaded successfully');
+        console.log('Start button element:', document.getElementById('startButton'));
             
-            document.getElementById('prevToIntro').addEventListener('click', () => {
+            document.getElementById('prevToIntro').addEventListener('click', function() {
                 showStep(1);
             });
             
-            document.getElementById('nextToLanguage').addEventListener('click', () => {
+            document.getElementById('nextToLanguage').addEventListener('click', function() {
                 if (selectedItem) {
                     showStep(3);
                     displaySelectedItemInfo();
                 }
             });
             
-            document.getElementById('prevToSelect').addEventListener('click', () => {
+            document.getElementById('prevToSelect').addEventListener('click', function() {
                 showStep(2);
             });
             
             document.getElementById('generateArticle').addEventListener('click', generateArticle);
             
-            document.getElementById('prevToGenerate').addEventListener('click', () => {
+            document.getElementById('prevToGenerate').addEventListener('click', function() {
                 showStep(3);
             });
             
-            document.getElementById('startOver').addEventListener('click', () => {
+            document.getElementById('startOver').addEventListener('click', function() {
                 selectedItem = null;
                 document.getElementById('nextToLanguage').disabled = true;
                 document.getElementById('nextToLanguage').classList.add('opacity-50', 'cursor-not-allowed');
@@ -335,7 +342,7 @@
             document.getElementById('searchInput').addEventListener('input', displayWikidataItems);
             
             // Copy wikitext button
-            document.getElementById('copyWikitext').addEventListener('click', () => {
+            document.getElementById('copyWikitext').addEventListener('click', function() {
                 const textarea = document.getElementById('wikitextOutput');
                 textarea.select();
                 document.execCommand('copy');
@@ -414,10 +421,17 @@
 
         // Navigation functions
         function showStep(stepNumber) {
+            console.log('Showing step:', stepNumber);
             document.querySelectorAll('.step').forEach(step => {
                 step.style.display = 'none';
             });
-            document.getElementById(`step${stepNumber}`).style.display = 'block';
+            
+            const targetStep = document.getElementById(`step${stepNumber}`);
+            if (targetStep) {
+                targetStep.style.display = 'block';
+            } else {
+                console.error(`Step ${stepNumber} not found`);
+            }
             
             // Update step indicators
             document.querySelectorAll('#stepsIndicator .step-indicator').forEach((indicator, index) => {
