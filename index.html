@@ -33,7 +33,7 @@
         <div class="max-w-7xl mx-auto py-4 px-6">
             <div class="flex justify-between items-center">
                 <div class="flex items-center">
-                    <div class="h-12 w-12 mr-3">📚</div>
+                    <div class="h-12 w-12 mr-3 text-4xl">📚</div>
                     <h1 class="text-3xl font-bold text-gray-800">WikiStubber</h1>
                 </div>
             </div>
@@ -62,7 +62,7 @@
                 </div>
                 
                 <div class="flex items-end">
-                    <button id="generateButton" onclick="generateStub()" class="wikimedia-button w-full py-2 px-6 rounded-md font-medium">
+                    <button id="generateButton" class="wikimedia-button w-full py-2 px-6 rounded-md font-medium">
                         Generate Stub
                     </button>
                 </div>
@@ -110,82 +110,30 @@
         };
 
         function extractQid(input) {
-            // Remove any whitespace
             input = input.trim();
-            
-            // If it starts with Q and has numbers, it's already a QID
             if (/^Q\d+$/.test(input)) {
                 return input;
             }
-            
-            // Try to extract QID from a URL
             const match = input.match(/Q\d+/);
             if (match) {
                 return match[0];
             }
-            
             return null;
         }
 
-        async function generateStub() {
-            const input = document.getElementById('wikidataInput').value;
-            const language = document.getElementById('languageSelect').value;
-            const qid = extractQid(input);
-            
-            if (!qid) {
-                alert('Please enter a valid Wikidata identifier (Q###) or URL');
-                return;
+        function getItemType(itemData) {
+            if (!itemData.claims || !itemData.claims.P31) {
+                return 'Generic item';
             }
             
-            const button = document.getElementById('generateButton');
-            button.innerHTML = '<span class="loading mr-2"></span> Generating...';
-            button.disabled = true;
-            
-            try {
-                const itemData = await fetchWikidataItem(qid);
-                if (!itemData) {
-                    throw new Error('Item not found');
-                }
-                
-                const wikitext = generateWikitext(itemData, language, qid);
-                
-                // Display results
-                document.getElementById('resultSection').style.display = 'block';
-                document.getElementById('wikitextOutput').value = wikitext;
-                
-                // Show item info
-                displayItemInfo(itemData, language);
-                
-                // Create preview (basic wikitext to HTML conversion)
-                const preview = convertToPreview(wikitext);
-                document.getElementById('preview').innerHTML = preview;
-                
-                // Set user page link
-                const articleTitle = getLabel(itemData, language).replace(/ /g, '_');
-                const userPageLink = document.getElementById('userPageLink');
-                userPageLink.textContent = `https://${language}.wikipedia.org/wiki/Special:MyPage/${articleTitle}`;
-                
-                document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
-                
-            } catch (error) {
-                alert('Error generating stub: ' + error.message);
-                console.error(error);
-            } finally {
-                button.innerHTML = 'Generate Stub';
-                button.disabled = false;
-            }
-        }
-
-        async function fetchWikidataItem(qid) {
-            const url = `https://www.wikidata.org/wiki/Special:EntityData/${qid}.json`;
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error('Failed to fetch Wikidata item');
+            const instanceClaims = itemData.claims.P31;
+            for (const claim of instanceClaims) {
+                const value = claim.mainsnak.datavalue?.value?.id;
+                if (value === 'Q5') return 'Human';
+                if (value === 'Q43229') return 'Organization';
             }
             
-            const data = await response.json();
-            return data.entities[qid];
+            return 'Generic item';
         }
 
         function getLabel(itemData, language) {
@@ -229,409 +177,78 @@
             document.getElementById('itemInfo').innerHTML = html;
         }
 
-        function formatDate(dateString, language) {
-            if (!dateString) return '';
-            
-            try {
-                const date = new Date(dateString);
-                const day = date.getDate();
-                const monthNames = {
-                    'en': ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-                    'nl': ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'],
-                    'pap': ['yanüari', 'febrüari', 'mart', 'aprel', 'mei', 'yüni', 'yüli', 'ougùstus', 'sèptèmber', 'òktober', 'novèmber', 'desèmber']
-                };
-                
-                const month = monthNames[language][date.getMonth()];
-                const year = date.getFullYear();
-                
-                if (language === 'en') {
-                    return `${month} ${day}, ${year}`;
-                } else {
-                    return `${day} ${month} ${year}`;
-                }
-            } catch {
-                return dateString;
-            }
-        }
-
-        function getClaimValue(itemData, property) {
-            if (!itemData.claims || !itemData.claims[property]) return null;
-            
-            const claims = itemData.claims[property];
-            if (claims.length === 0) return null;
-            
-            const claim = claims[0];
-            const datavalue = claim.mainsnak.datavalue;
-            
-            if (!datavalue) return null;
-            
-            if (datavalue.type === 'string') {
-                return datavalue.value;
-            } else if (datavalue.type === 'time') {
-                return datavalue.value.time;
-            } else if (datavalue.type === 'wikibase-entityid') {
-                return datavalue.value.id;
-            }
-            
-            return null;
-        }
-            if (!itemData.claims || !itemData.claims.P31) {
-                return 'Generic item';
-            }
-            
-            const instanceClaims = itemData.claims.P31;
-            for (const claim of instanceClaims) {
-                const value = claim.mainsnak.datavalue?.value?.id;
-                if (value === 'Q5') return 'Human';
-                if (value === 'Q43229') return 'Organization';
-            }
-            
-            return 'Generic item';
-        }
-
         function generateWikitext(itemData, language, qid) {
             const itemType = getItemType(itemData);
             const label = getLabel(itemData, language);
             const description = getDescription(itemData, language);
             
-            // Extract key Wikidata information
-            const birthDate = getClaimValue(itemData, 'P569');
-            const birthPlace = getClaimValue(itemData, 'P19');
-            const occupation = getClaimValue(itemData, 'P106');
-            const website = getClaimValue(itemData, 'P856');
-            
             let wikitext = '';
             
             if (itemType === 'Human') {
-                // Language-specific infobox
                 const infobox = {
-                    'en': `{{Infobox person/Wikidata | fetchwikidata=ALL}}`,
-                    'nl': `{{Infobox persoon Wikidata}}`,
-                    'pap': `{{Infobox persona}}`
-                }[language] || `{{Infobox person/Wikidata | fetchwikidata=ALL}}`;
-                
-                // Birth information
-                let birthInfo = '';
-                if (birthDate) {
-                    const formattedDate = formatDate(birthDate, language);
-                    const birthText = {
-                        'en': `(${formattedDate}) is`,
-                        'nl': `(${formattedDate}) is een`,
-                        'pap': `(${formattedDate}) ta un`
-                    }[language] || `(${formattedDate}) is`;
-                    
-                    if (birthPlace) {
-                        birthInfo = birthText.replace(')', `, ${birthPlace})`);
-                    } else {
-                        birthInfo = birthText;
-                    }
-                }
-                
-                // Occupation/description
-                let occupationText = '';
-                if (occupation) {
-                    // This is a simplified version - you'd want to resolve the Q-identifier to the actual occupation name
-                    occupationText = {
-                        'en': `${description || 'a person'}`,
-                        'nl': `${description || 'persoon'}`,
-                        'pap': `${description || 'un persona'}`
-                    }[language];
-                } else {
-                    occupationText = {
-                        'en': `${description || 'a person'}`,
-                        'nl': `${description || 'persoon'}`,
-                        'pap': `${description || 'un persona'}`
-                    }[language];
-                }
-                
-                const headers = {
-                    'en': {
-                        life: 'Early life',
-                        career: 'Career',
-                        work: 'Works',
-                        personal: 'Personal life',
-                        external: 'External links',
-                        references: 'References'
-                    },
-                    'nl': {
-                        life: 'Leven en werk',
-                        career: 'Loopbaan',
-                        work: 'Werk',
-                        personal: 'Persoonlijk leven',
-                        external: 'Externe links',
-                        references: 'Bronnen, noten en referenties'
-                    },
-                    'pap': {
-                        life: 'Bida i obra',
-                        career: 'Kariera',
-                        work: 'Obra',
-                        personal: 'Bida personal',
-                        external: 'Link eksterno',
-                        references: 'Referencia'
-                    }
-                }[language];
+                    'en': '{{Infobox person/Wikidata | fetchwikidata=ALL}}',
+                    'nl': '{{Infobox persoon Wikidata}}',
+                    'pap': '{{Infobox persona}}'
+                }[language] || '{{Infobox person/Wikidata | fetchwikidata=ALL}}';
                 
                 wikitext = `${infobox}
 
-'''${label}''' ${birthInfo} ${occupationText}.
+'''${label}''' ${description}.
 
-==${headers.life}==
-<!-- Biesha kòpkes den e artíkulo akí por wòrdu adaptá segun nesesidát. -->
-${label} 
+== Leven en werk ==
+${label}
 
-==${headers.career}==
-<!-- Agregá informashon tokante su kariera. -->
+== Externe links ==
+* <!-- Add official website -->
 
-==${headers.personal}==
-<!-- Agregá informashon tokante bida personal. -->
-
-==${headers.external}==
-${website ? `* [${website} Sitio web oficial]` : '* <!-- Agregá link pa sitio web -->'}
-
-==${headers.references}==
+== Bronnen, noten en referenties ==
 {{reflist}}
 
-[[Category:]]<!-- Agregá kategoria apropriado -->
-`;
+[[Category:]]`;
             } else if (itemType === 'Organization') {
                 const infobox = {
-                    'en': `{{Infobox organization/Wikidata}}`,
-                    'nl': `{{Infobox organisatie Wikidata}}`,
-                    'pap': `{{Infobox organisashon}}`
-                }[language] || `{{Infobox organization/Wikidata}}`;
+                    'en': '{{Infobox organization/Wikidata}}',
+                    'nl': '{{Infobox organisatie Wikidata}}',
+                    'pap': '{{Infobox organisashon}}'
+                }[language] || '{{Infobox organization/Wikidata}}';
                 
                 wikitext = `${infobox}
 
-'''${label}''' ta ${description}.
+'''${label}''' ${description}.
 
-==Historia==
-<!-- Agregá informashon tokante historiá di e organisashon. -->
+== Historia ==
+<!-- Add organization history -->
 
-==Aktividatnan==
-<!-- Agregá informashon tokante kiko e organisashon ta hasi. -->
+== Externe links ==
+* <!-- Add official website -->
 
-==Link eksterno==
-${website ? `* [${website} Sitio web oficial]` : ''}
-
-==Referencia==
+== Bronnen, noten en referenties ==
 {{reflist}}
 
-[[Category:]]<!-- Agregá kategoria apropriado -->
-`;
+[[Category:]]`;
             } else {
                 wikitext = `'''${label}''' ${description}.
 
-==Overview==
-<!-- Add general information about this item -->
+== Overview ==
+<!-- Add general information -->
 
-==External links==
+== External links ==
 * {{Wikidata Infobox|${qid}}}
 
-==References==
+== References ==
 {{reflist}}
 
-[[Category:]]
-`;
-            }
-            
-            return wikitext;
-        }
-                // Language-specific infobox
-                const infobox = {
-                    'en': `{{Infobox person/Wikidata | fetchwikidata=ALL}}`,
-                    'nl': `{{Infobox persoon Wikidata}}`,
-                    'pap': `{{Infobox persona}}`
-                }[language] || `{{Infobox person/Wikidata | fetchwikidata=ALL}}`;
-                
-                // Birth information
-                let birthInfo = '';
-                if (birthDate) {
-                    const formattedDate = formatDate(birthDate, language);
-                    const birthText = {
-                        'en': `(${formattedDate}) is`,
-                        'nl': `(${formattedDate}) is een`,
-                        'pap': `(${formattedDate}) ta un`
-                    }[language] || `(${formattedDate}) is`;
-                    
-                    if (birthPlace) {
-                        birthInfo = birthText.replace(')', `, ${birthPlace})`);
-                    } else {
-                        birthInfo = birthText;
-                    }
-                }
-                
-                // Occupation/description
-                let occupationText = '';
-                if (occupation) {
-                    // This is a simplified version - you'd want to resolve the Q-identifier to the actual occupation name
-                    occupationText = {
-                        'en': `${description || 'a person'}`,
-                        'nl': `${description || 'persoon'}`,
-                        'pap': `${description || 'un persona'}`
-                    }[language];
-                } else {
-                    occupationText = {
-                        'en': `${description || 'a person'}`,
-                        'nl': `${description || 'persoon'}`,
-                        'pap': `${description || 'un persona'}`
-                    }[language];
-                }
-                
-                const headers = {
-                    'en': {
-                        life: 'Early life',
-                        career: 'Career',
-                        work: 'Works',
-                        personal: 'Personal life',
-                        external: 'External links',
-                        references: 'References'
-                    },
-                    'nl': {
-                        life: 'Leven en werk',
-                        career: 'Loopbaan',
-                        work: 'Werk',
-                        personal: 'Persoonlijk leven',
-                        external: 'Externe links',
-                        references: 'Bronnen, noten en referenties'
-                    },
-                    'pap': {
-                        life: 'Bida i obra',
-                        career: 'Kariera',
-                        work: 'Obra',
-                        personal: 'Bida personal',
-                        external: 'Link eksterno',
-                        references: 'Referencia'
-                    }
-                }[language];
-                
-            return wikitext;
-        }
-        }
-                wikitext = `{{Infobox person
-|name        = ${label}
-|image       = <!-- Add image if available -->
-|birth_date  = <!-- {{Wikidata|${qid}|P569|format=df}} -->
-|birth_place = <!-- {{Wikidata|${qid}|P19}} -->
-|death_date  = <!-- {{Wikidata|${qid}|P570|format=df}} -->
-|death_place = <!-- {{Wikidata|${qid}|P20}} -->
-|nationality = <!-- {{Wikidata|${qid}|P27}} -->
-|occupation  = <!-- {{Wikidata|${qid}|P106}} -->
-|education   = <!-- {{Wikidata|${qid}|P69}} -->
-|alma_mater  = <!-- {{Wikidata|${qid}|P69}} -->
-}}
-
-'''${label}''' <!-- Add a brief description here -->
-
-== Early life ==
-<!-- Add information about early life and background -->
-
-== Career ==
-<!-- Add information about their professional work -->
-
-== Personal life ==
-<!-- Add personal details if appropriate -->
-
-== Recognition ==
-<!-- Add awards and recognition -->
-
-== Works ==
-<!-- Add notable publications, art, or other works -->
-
-== References ==
-<references />
-
-== External links ==
-* {{Wikidata Infobox|${qid}}}
-
-{{Authority control}}
-{{DEFAULTSORT:${label.split(' ').pop()}}}
-
-[[Category:]]
-<!-- 
-This stub was created with WikiStubber.
-Please expand this article with more information, references, and reliable sources.
--->`;
-            } else if (itemType === 'Organization') {
-                wikitext = `{{Infobox organization
-|name         = ${label}
-|image        = <!-- Add logo if available -->
-|formation    = <!-- {{Wikidata|${qid}|P571|format=df}} -->
-|founder      = <!-- {{Wikidata|${qid}|P112}} -->
-|type         = <!-- {{Wikidata|${qid}|P31}} -->
-|headquarters = <!-- {{Wikidata|${qid}|P159}} -->
-|location     = <!-- {{Wikidata|${qid}|P276}} -->
-|key_people   = <!-- {{Wikidata|${qid}|P169}} -->
-|website      = <!-- {{Wikidata|${qid}|P856}} -->
-}}
-
-'''${label}''' <!-- Add a brief description here -->
-
-== History ==
-<!-- Add information about the organization's founding and development -->
-
-== Structure ==
-<!-- Add information about organizational structure -->
-
-== Activities ==
-<!-- Add information about what the organization does -->
-
-== Impact ==
-<!-- Add information about the organization's impact or achievements -->
-
-== Funding ==
-<!-- Add information about funding or support -->
-
-== External links ==
-* {{Wikidata Infobox|${qid}}}
-
-{{Authority control}}
-
-[[Category:]]
-<!-- 
-This stub was created with WikiStubber.
-Please expand this article with more information, references, and reliable sources.
--->`;
-            } else {
-                wikitext = `'''${label}''' <!-- Add a brief description here -->
-
-== Overview ==
-<!-- Add general information about this item -->
-
-== Details ==
-<!-- Add more specific details -->
-
-== Related topics ==
-<!-- Add links to related topics -->
-
-== References ==
-<references />
-
-== External links ==
-* {{Wikidata Infobox|${qid}}}
-
-[[Category:]]
-<!-- 
-This stub was created with WikiStubber.
-Please expand this article with more information, references, and reliable sources.
--->`;
+[[Category:]]`;
             }
             
             return wikitext;
         }
 
         function convertToPreview(wikitext) {
-            // Very basic wikitext to HTML conversion for preview
             let html = wikitext
-                .replace(/\[\[File:[^\]]+\]\]/g, '')
-                .replace(/\[\[Image:[^\]]+\]\]/g, '')
                 .replace(/\{\{Infobox[^}]+\}\}/g, '<div class="border p-4 bg-gray-100 mb-4">Infobox</div>')
                 .replace(/==\s*([^=]+)\s*==/g, '<h2 class="text-xl font-bold mt-4 mb-2">$1</h2>')
-                .replace(/===\s*([^=]+)\s*===/g, '<h3 class="text-lg font-bold mt-3 mb-1">$1</h3>')
-                .replace(/\[\[([^\]|]+)\]\]/g, '<a href="#" class="text-blue-600">$1</a>')
-                .replace(/\[\[([^\]]+)\|([^\]]+)\]\]/g, '<a href="#" class="text-blue-600">$2</a>')
                 .replace(/'''([^']+)'''/g, '<strong>$1</strong>')
-                .replace(/''([^']+)''/g, '<em>$1</em>')
-                .replace(/<!--([^>]*)-->/g, '<span class="text-gray-400"><!-- $1 --></span>')
                 .replace(/\n\n/g, '</p><p class="mb-2">')
                 .replace(/\n/g, '<br>');
             
@@ -641,10 +258,8 @@ Please expand this article with more information, references, and reliable sourc
         function copyToClipboard() {
             const textarea = document.getElementById('wikitextOutput');
             textarea.select();
-            textarea.setSelectionRange(0, 99999);
             document.execCommand('copy');
             
-            // Show feedback
             const button = event.target;
             const originalText = button.innerHTML;
             button.innerHTML = 'Copied!';
@@ -655,6 +270,66 @@ Please expand this article with more information, references, and reliable sourc
                 button.className = 'bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md';
             }, 2000);
         }
+
+        async function fetchWikidataItem(qid) {
+            const url = `https://www.wikidata.org/wiki/Special:EntityData/${qid}.json`;
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch Wikidata item');
+            }
+            
+            const data = await response.json();
+            return data.entities[qid];
+        }
+
+        function generateStub() {
+            const input = document.getElementById('wikidataInput').value;
+            const language = document.getElementById('languageSelect').value;
+            const qid = extractQid(input);
+            
+            if (!qid) {
+                alert('Please enter a valid Wikidata identifier (Q###) or URL');
+                return;
+            }
+            
+            const button = document.getElementById('generateButton');
+            button.innerHTML = '<span class="loading mr-2"></span> Generating...';
+            button.disabled = true;
+            
+            fetchWikidataItem(qid)
+                .then(itemData => {
+                    if (!itemData) {
+                        throw new Error('Item not found');
+                    }
+                    
+                    const wikitext = generateWikitext(itemData, language, qid);
+                    
+                    document.getElementById('resultSection').style.display = 'block';
+                    document.getElementById('wikitextOutput').value = wikitext;
+                    
+                    displayItemInfo(itemData, language);
+                    
+                    const preview = convertToPreview(wikitext);
+                    document.getElementById('preview').innerHTML = preview;
+                    
+                    const articleTitle = getLabel(itemData, language).replace(/ /g, '_');
+                    const userPageLink = document.getElementById('userPageLink');
+                    userPageLink.textContent = `https://${language}.wikipedia.org/wiki/Special:MyPage/${articleTitle}`;
+                    
+                    document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+                })
+                .catch(error => {
+                    alert('Error generating stub: ' + error.message);
+                    console.error(error);
+                })
+                .finally(() => {
+                    button.innerHTML = 'Generate Stub';
+                    button.disabled = false;
+                });
+        }
+
+        document.getElementById('generateButton').addEventListener('click', generateStub);
     </script>
 </body>
 </html>
